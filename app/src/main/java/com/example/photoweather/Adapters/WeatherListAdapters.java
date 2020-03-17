@@ -15,12 +15,13 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import static com.example.photoweather.MainActivity.convertBase64ToBitmap;
+import static com.example.photoweather.Utils.ConvertPhotos.convertBase64ToBitmap;
+
 
 public class WeatherListAdapters extends RecyclerView.Adapter<WeatherListAdapters.viewHolder> {
 
-    List<WeatherModel> data;
-    onIteamClickLisnear onItemClick;
+    private List<WeatherModel> data;
+    private onIteamClickLisnear onItemClick;
 
     public void setOnItemClick(onIteamClickLisnear onItemClick) {
         this.onItemClick = onItemClick;
@@ -65,19 +66,17 @@ public class WeatherListAdapters extends RecyclerView.Adapter<WeatherListAdapter
         notifyDataSetChanged();
     }
     @Override
-    public int getItemCount() {
-        if(data==null)return 0 ;
-        return data.size();
+    public int getItemCount() { return (data==null)? 0 : data.size();
     }
 
     class viewHolder extends RecyclerView.ViewHolder{
 
-        TextView temp;
-        TextView Maxtemp;
-        TextView Mintemp;
-        TextView date;
-        TextView weatherCondition;
-        ImageView imageView;
+        private  TextView temp;
+        private TextView Maxtemp;
+        private TextView Mintemp;
+        private TextView date;
+        private TextView weatherCondition;
+        private ImageView imageView;
 
         public viewHolder(@NonNull View itemView) {
             super(itemView);

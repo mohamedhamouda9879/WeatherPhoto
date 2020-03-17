@@ -9,6 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public abstract class ApiManager {
 
+    private static String BASEURL="https://api.openweathermap.org/";
 
    private static Retrofit retrofitInstance;
      private static Retrofit getInstance(){
@@ -25,7 +26,7 @@ public abstract class ApiManager {
                  .build();
 
          if(retrofitInstance==null){
-             retrofitInstance=new Retrofit.Builder().baseUrl("https://api.openweathermap.org/")
+             retrofitInstance=new Retrofit.Builder().baseUrl(BASEURL)
                      .addConverterFactory(GsonConverterFactory.create())
                      .client(okHttpClient)
                      .build();

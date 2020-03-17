@@ -15,7 +15,7 @@ import androidx.room.RoomDatabase;
 public abstract class WeatherDataBase extends RoomDatabase {
 
 
-    final static String DBName="WDB";
+    final static String DBName="DBWeather";
     public abstract WeatherDao weatherDao();
 
     private static WeatherDataBase myDataBase;

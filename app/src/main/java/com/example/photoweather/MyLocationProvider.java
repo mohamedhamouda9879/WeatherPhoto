@@ -8,11 +8,7 @@ import android.location.LocationManager;
 
 import java.util.List;
 
-/**
- * Created by Mohamed Nabil Mohamed (Nobel) on 3/1/2019.
- * byte code SA
- * m.nabil.fci2015@gmail.com
- */
+
 public class MyLocationProvider {
 
     LocationManager locationManager;
@@ -74,7 +70,7 @@ public class MyLocationProvider {
                 continue;
             }
             if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
-                // Found best last known location: %s", l);
+
                 bestLocation = l;
             }
         }

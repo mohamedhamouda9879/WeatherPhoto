@@ -4,5 +4,7 @@
     <string name="warning">Warning</string>
     <string name="location_explanitaion">we need to access your location to show nearby cafe\'s</string>
     <string name="ok">ok</string>
-
+    <string name="THE_MOVIE_DB_API_TOKEN">9e8d8267f5693a95b9c0a0f012c59230</string>
+    <string name="facebook_app_id">2807155732941929</string>
+    <string name="facebook_share_button">Facebook Share Post</string>
 </resources>

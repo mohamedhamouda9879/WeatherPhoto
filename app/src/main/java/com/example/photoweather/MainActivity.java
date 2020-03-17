@@ -2,7 +2,9 @@ package com.example.photoweather;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
@@ -20,6 +22,16 @@ import com.example.photoweather.DataBase.WeatherDataBase;
 import com.example.photoweather.Model.Main;
 import com.example.photoweather.Model.WeatherItem;
 import com.example.photoweather.Model.WeatherResponse;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookDialog;
+
+import com.facebook.FacebookSdk;
+import com.facebook.share.model.ShareLinkContent;
+import com.facebook.share.model.SharePhoto;
+import com.facebook.share.model.SharePhotoContent;
+import com.facebook.share.widget.ShareButton;
+import com.facebook.share.widget.ShareDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -46,6 +58,8 @@ import android.widget.Toast;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -53,44 +67,45 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import static com.example.photoweather.Utils.ConvertPhotos.convertBitmapToBase64;
+
 public class MainActivity extends BaseActivity implements LocationListener {
 
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 500;
     private static final int MY_PERMISSIONS_REQUEST_CAMERA = 0;
-    ImageView imageView;
-    public static final String APIKEY="9e8d8267f5693a95b9c0a0f012c59230";
     MyLocationProvider myLocationProvider;
-    Location location;
-    Bitmap imageBitmap;
-    String temp="";
-    String MinTemp="";
-    String MaxTemp="";
-    String city="";
-    String desc="";
-   String selectedImage="";
-   List<WeatherModel> data;
-   RecyclerView recyclerView;
-   WeatherListAdapters adapter;
-    String currentDateandTime="";
+    private   Location location;
+    private  Bitmap imageBitmap;
+    private  String temp = "";
+    private String MinTemp = "";
+    private String MaxTemp = "";
+    private String city = "";
+    private String desc = "";
+    private String selectedImage = "";
+    private List<WeatherModel> WeatherData;
+    private RecyclerView recyclerView;
+    private WeatherListAdapters adapter;
+    private String currentDateandTime = "";
 
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        updateList();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        recyclerView=findViewById(R.id.recyclerView);
-        setData();
+         recyclerView=findViewById(R.id.recyclerView);
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 dispatchTakePictureIntent();
-                /*.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();*/
             }
         });
 
@@ -101,35 +116,38 @@ public class MainActivity extends BaseActivity implements LocationListener {
             requestLocationPermession();
         }
 
+        //Calling Api to get Data
         callApi();
-        adapter=new WeatherListAdapters(data);
-        recyclerView.setAdapter(adapter);
 
+
+        adapter=new WeatherListAdapters(WeatherData);
+        recyclerView.setAdapter(adapter);
         adapter.setOnItemClick(new WeatherListAdapters.onIteamClickLisnear() {
             @Override
             public void onItemClick(int pos, WeatherModel weatherModel) {
-
-                Log.e("errr",data.get(pos).getTemp()+"");
                 Bundle intent = new Bundle();
-                intent.putString("temp",data.get(pos).getTemp());
-                intent.putString("Maxtemp",data.get(pos).getMaxtemp());
-                intent.putString("Mintemp",data.get(pos).getMintemp());
-                intent.putString("date",data.get(pos).getDate());
-                intent.putString("desc",data.get(pos).getWeatherCondition());
-                intent.putString("image",data.get(pos).getImage());
-//                startActivity(intent);
-
+                intent.putString("temp",WeatherData.get(pos).getTemp());
+                intent.putString("Maxtemp",WeatherData.get(pos).getMaxtemp());
+                intent.putString("Mintemp",WeatherData.get(pos).getMintemp());
+                intent.putString("date",WeatherData.get(pos).getDate());
+                intent.putString("desc",WeatherData.get(pos).getWeatherCondition());
+                intent.putString("image",WeatherData.get(pos).getImage());
                 WeatherDialogFragment weatherDialogFragment=new WeatherDialogFragment();
                 weatherDialogFragment.setArguments(intent);
                 weatherDialogFragment.show(getSupportFragmentManager(),"Weather");
             }
         });
+
+
+
+
+
     }
 
-    void setData(){
-
-        data= new ArrayList<>();
-        data=WeatherDataBase.getInstance(MainActivity.this).weatherDao().getWeatherList();
+    private void updateList() {
+        WeatherData=WeatherDataBase.
+                getInstance(MainActivity.this).weatherDao().getWeatherList();
+        adapter.changeData(WeatherData);
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -158,18 +176,16 @@ public class MainActivity extends BaseActivity implements LocationListener {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == MY_PERMISSIONS_REQUEST_CAMERA && resultCode == RESULT_OK
-                ) {
+        ) {
             Bundle extras = data.getExtras();
             imageBitmap = (Bitmap) extras.get("data");
-            //selectedImage=(Uri) extras.get("data");
+
             selectedImage=convertBitmapToBase64(imageBitmap);
 
-            Log.e("CAMERA",currentDateandTime);
             WeatherDataBase.getInstance(MainActivity.this).weatherDao().insertItem(
                     new WeatherModel(selectedImage,temp,MaxTemp,
                             MinTemp,city,desc,currentDateandTime));
-           // Bitmap x=convertBase64ToBitmap(selectedImage);
-           //imageView.setImageBitmap(x);
+
         }
     }
 
@@ -183,7 +199,7 @@ public class MainActivity extends BaseActivity implements LocationListener {
 
     private void callApi(){
         ApiManager.getApis().getWeather(location.getLatitude()
-                ,location.getLongitude(),APIKEY)
+                ,location.getLongitude(),getString(R.string.THE_MOVIE_DB_API_TOKEN))
                 .enqueue(new Callback<WeatherResponse>() {
                     @Override
                     public void onResponse(Call<WeatherResponse> call,
@@ -200,13 +216,9 @@ public class MainActivity extends BaseActivity implements LocationListener {
                         desc=response.body().getWeather().get(0).getDescription();
                         Log.e("TEMP",temp);
                         Log.e("desc",desc);
-
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
                         currentDateandTime = sdf.format(new Date());
-
-
-
-                    }
+  }
                     @Override
                     public void onFailure(Call<WeatherResponse> call, Throwable t) {
                         Log.e("API","can't get response");
@@ -304,14 +316,20 @@ public class MainActivity extends BaseActivity implements LocationListener {
     }
 
 
-    public static String convertBitmapToBase64(Bitmap bitmap) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-        byte[] byteArray = byteArrayOutputStream .toByteArray();
-        return Base64.encodeToString(byteArray, Base64.DEFAULT);
-    }
-    public static Bitmap convertBase64ToBitmap(String b64) {
-        byte[] imageAsBytes = Base64.decode(b64.getBytes(), Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
+
+    private void printKeyHash() {
+        // Add code to print out the key hash
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo("com.example.medica", PackageManager.GET_SIGNATURES);
+            for (Signature signature : info.signatures) {
+                MessageDigest md = MessageDigest.getInstance("SHA");
+                md.update(signature.toByteArray());
+                Log.e("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e("KeyHash:", e.toString());
+        } catch (NoSuchAlgorithmException e) {
+            Log.e("KeyHash:", e.toString());
+        }
     }
 }
